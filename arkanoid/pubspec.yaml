@@ -1,0 +1,5 @@
+name: arkanoid
+description: A sample web application
+dependencies:
+  browser: any
+  vector_math: any
