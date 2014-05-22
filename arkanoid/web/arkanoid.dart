@@ -8,6 +8,7 @@ Stopwatch stopky = new Stopwatch();
 List<HerniObjekt> herniObjekty = new List<HerniObjekt>();
 List<Cihla> cihly = new List<Cihla>();
 List<Cihla> mazaneCihly = new List<Cihla>();
+List<PowerUp> pupy = new List<PowerUp>();
 Palka palka;
 Micek micek;
 Cihla cihla;
@@ -39,31 +40,31 @@ void init(){
 
 void udelejCihly(){
   cihla = new Cihla();
-  cihla.nastavParametry(100,200,2,0,200);
+  cihla.nastavParametry(100,200,2,1,200);
   cihly.add(cihla);
   cihla = new Cihla();
-  cihla.nastavParametry(200,200,2,0,200);
+  cihla.nastavParametry(200,200,2,1,200);
   cihly.add(cihla);
   cihla = new Cihla();
-  cihla.nastavParametry(300,200,2,0,200);
+  cihla.nastavParametry(300,200,2,1,200);
   cihly.add(cihla);
   cihla = new Cihla();
-  cihla.nastavParametry(400,200,2,0,200);
+  cihla.nastavParametry(400,200,2,1,200);
   cihly.add(cihla);
   cihla = new Cihla();
-  cihla.nastavParametry(500,200,2,0,200);
+  cihla.nastavParametry(500,200,2,1,200);
   cihly.add(cihla);
   cihla = new Cihla();
-  cihla.nastavParametry(600,200,2,0,200);
+  cihla.nastavParametry(600,200,2,1,200);
   cihly.add(cihla);
   cihla = new Cihla();
-  cihla.nastavParametry(700,200,2,0,200);
+  cihla.nastavParametry(700,200,2,1,200);
   cihly.add(cihla);
   cihla = new Cihla();
-  cihla.nastavParametry(100,400,2,0,200);
+  cihla.nastavParametry(100,400,2,1,200);
   cihly.add(cihla);
   cihla = new Cihla();
-  cihla.nastavParametry(200,400,2,0,200);
+  cihla.nastavParametry(200,400,2,1,200);
   cihly.add(cihla);
   cihla = new Cihla();
   cihla.nastavParametry(300,400,2,0,200);
@@ -91,6 +92,7 @@ void draw(){
     
   herniObjekty.forEach((objekt) => objekt.nakresliSe(ctx));
   cihly.forEach((objekt) => objekt.nakresliSe(ctx)); 
+  pupy.forEach((objekt)=> objekt.nakresliSe(ctx));
   ctx.fillText("Pokusy: "+pokusy.toString(), 20, 20);
   ctx.fillText("Skóre: "+body.toString(), 20, 40);
   
@@ -102,6 +104,9 @@ void draw(){
 }
 
 void loop(num _){
+  pupy.forEach((objekt)=> objekt.pohyb());
+  pupy.forEach((objekt) {if(objekt.sebran&&(objekt.s.elapsedMilliseconds>objekt.cas)) objekt.ukonci();});
+  pupy.forEach((pup) { if(palka.kolizniTest(pup)) pup.kolize();});
   cihly.forEach((objekt) { if(micek.kolizniTest(objekt)&&objekt.naraz()) mazaneCihly.add(objekt);});
   micek.pohyb();
 
@@ -111,11 +116,7 @@ void loop(num _){
 
 }
 
-int idCihly(Cihla _c){
-  for (int i=0;i<cihly.length;i++){
-   if((cihly.elementAt(i).x == _c.x)&&(cihly.elementAt(i).y == _c.y)) return i;
-  }
-}
+
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 abstract class HerniObjekt{
@@ -208,20 +209,7 @@ class Micek extends HerniObjekt{
 
   
    void kolize(HerniObjekt _obj){
-    /* if((!((_obj.y)<(y)) 
-         && ((_obj.y + _obj.vyska)>(y)))
-         ||(!((_obj.y)<(y + vyska)) 
-             && ((_obj.y + _obj.vyska)<(y + vyska)))){
-       dy=-dy;
-       }                      
-     if((!((_obj.x)<(x)) 
-         && ((_obj.x + _obj.sirka)>(x)))
-         ||(!((_obj.x)<(x + sirka)) 
-             && ((_obj.x + _obj.sirka)<(x + sirka)))){
-       dx=-dx;
-       }*/
-     
-     
+  
      
      if(kolizniTest(_obj)){
 
@@ -283,7 +271,7 @@ class Cihla extends HerniObjekt{
   
   
   Cihla(){
-    barva="red";
+
     sirka = 72;
     vyska = 34;
     id = cihly.length +1;
@@ -295,6 +283,11 @@ class Cihla extends HerniObjekt{
     zivot = ziv;
     powerup = pow;
     skore = skor;
+    switch(powerup){
+      case 0: barva ="red"; break;
+      case 1: barva = "blue"; break;
+      case 2: barva = "green";break;     
+    }
     
   }
   
@@ -305,15 +298,78 @@ class Cihla extends HerniObjekt{
     if (zivot>0) {zivot -= 1;}
     if(zivot<1){
       body+=skore;
+      vyhodPowerup();
       ret= true;  
     }
     return ret;
     }
   
+  void vyhodPowerup(){
+    if(powerup!=0){
+      PowerUp p = new PowerUp(x+(sirka~/2).toInt(),y+vyska,powerup);
+      pupy.add(p);
+    }
+  }
+  
   
 }
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
+class PowerUp extends HerniObjekt{
+ int id;
+ int cas;
+ Stopwatch s = new Stopwatch();
+ bool sebran;
+ 
+ PowerUp(int _x, int _y, int _id){
+   x=_x;
+   y=_y;
+   sirka=10;
+   vyska=10;
+   id=_id;
+   sebran = false;
+   switch(id){
+     case 1: barva="yellow"; cas = 10000; break;
+   }
+   
+ }
+ 
+ void efekt(){
+   s.start();
+   switch(id){
+     case 1:
+       palka.sirka = 150; break;
+   }
+   
+ }
+ 
+ void kolize(){
+   efekt();
+   sebran=true;
+ }
+ 
+ void pohyb(){
+   y+=4;
+ }
+ 
+  @override
+  void nakresliSe(CanvasRenderingContext2D _ctx){
+    if(!sebran) super.nakresliSe(_ctx);
+  }
+ 
+ void ukonci(){
+   switch(id){
+     case 1:
+       palka.sirka = 100; break;
+   }
+ }
+ 
+ 
+ 
+ 
+ 
+  
+  
+}
 
 
 
