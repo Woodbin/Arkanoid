@@ -31,16 +31,56 @@ void init(){
   platno.onMouseMove.listen(palka.move);                                  //<--------
   herniObjekty.add(palka);
   herniObjekty.add(micek);
+  udelejCihly();
+  
+  
+  draw();
+}
+
+void udelejCihly(){
+  cihla = new Cihla();
+  cihla.nastavParametry(100,200,2,0,200);
+  cihly.add(cihla);
+  cihla = new Cihla();
+  cihla.nastavParametry(200,200,2,0,200);
+  cihly.add(cihla);
+  cihla = new Cihla();
+  cihla.nastavParametry(300,200,2,0,200);
+  cihly.add(cihla);
+  cihla = new Cihla();
+  cihla.nastavParametry(400,200,2,0,200);
+  cihly.add(cihla);
   cihla = new Cihla();
   cihla.nastavParametry(500,200,2,0,200);
   cihly.add(cihla);
   cihla = new Cihla();
-    cihla.nastavParametry(200,400,2,0,200);
-    cihly.add(cihla);
-    cihla = new Cihla();
-      cihla.nastavParametry(100,600,2,0,200);
-      cihly.add(cihla);
-  draw();
+  cihla.nastavParametry(600,200,2,0,200);
+  cihly.add(cihla);
+  cihla = new Cihla();
+  cihla.nastavParametry(700,200,2,0,200);
+  cihly.add(cihla);
+  cihla = new Cihla();
+  cihla.nastavParametry(100,400,2,0,200);
+  cihly.add(cihla);
+  cihla = new Cihla();
+  cihla.nastavParametry(200,400,2,0,200);
+  cihly.add(cihla);
+  cihla = new Cihla();
+  cihla.nastavParametry(300,400,2,0,200);
+  cihly.add(cihla);
+  cihla = new Cihla();
+  cihla.nastavParametry(400,400,2,0,200);
+  cihly.add(cihla);
+  cihla = new Cihla();
+  cihla.nastavParametry(500,400,2,0,200);
+  cihly.add(cihla);
+  cihla = new Cihla();
+  cihla.nastavParametry(600,400,2,0,200);
+  cihly.add(cihla);
+  cihla = new Cihla();
+  cihla.nastavParametry(700,400,2,0,200);
+  cihly.add(cihla);
+  
 }
 
 void draw(){
@@ -54,12 +94,17 @@ void draw(){
   ctx.fillText("Pokusy: "+pokusy.toString(), 20, 20);
   ctx.fillText("Skóre: "+body.toString(), 20, 40);
   
-  window.requestAnimationFrame(loop);
+  if(pokusy!=0) window.requestAnimationFrame(loop);
+  else{
+    ctx.fillStyle="black";
+    ctx.fillText("Konec hry!", 400, 400);
+  }
 }
 
 void loop(num _){
+  cihly.forEach((objekt) { if(micek.kolizniTest(objekt)&&objekt.naraz()) mazaneCihly.add(objekt);});
   micek.pohyb();
-  cihly.forEach((objekt) { if(objekt.kolizniTest(micek)&&objekt.naraz()) mazaneCihly.add(objekt);});
+
   mazaneCihly.forEach((obj) =>cihly.remove(obj));
   mazaneCihly.clear();
   draw();
@@ -94,6 +139,7 @@ abstract class HerniObjekt{
        return tento.containsRectangle(tamten);
   }
   
+  
   Vector2 smerovyTest(HerniObjekt _obj){
      return new Vector2((_obj.x-x).toDouble(),(_obj.y-y).toDouble());
   }
@@ -113,7 +159,7 @@ class Palka extends HerniObjekt{
     vyska = 15;
     x = ((_can.width)~/2)-(sirka~/2);
     y = (_can.height)-50;
-    barva = "red";    
+    barva = "green";    
   }
   void move(MouseEvent e){
     x = e.offset.x;
@@ -140,11 +186,11 @@ class Micek extends HerniObjekt{
   }
   
   void nakresliSe(CanvasRenderingContext2D _ctx){
-    /*ctx.fillStyle = "red";
+    /*ctx.fillStyle = barva;
     ctx.ellipse(x, y, sirka,sirka, 0, 0,2*PI , false);
     ctx.fill();*/
-    _ctx.fillStyle = "green"; 
-    _ctx.rect(x, y, sirka, sirka);
+    _ctx.fillStyle = barva; 
+    _ctx.fillRect(x, y, sirka, sirka);
     _ctx.fill();
   }
   
@@ -158,8 +204,8 @@ class Micek extends HerniObjekt{
           }
         else
           return false;
+        }
 
-  }
   
    void kolize(HerniObjekt _obj){
     /* if((!((_obj.y)<(y)) 
@@ -188,31 +234,33 @@ class Micek extends HerniObjekt{
 
          
             
-       if (((docasneX)>=(_obj.x))&&((docasneX+novaSirka)<=((_obj.x + _obj.sirka).toDouble()))){
+       if (((docasneX+dx)>=(_obj.x))&&((docasneX+novaSirka+dx)<=((_obj.x + _obj.sirka).toDouble()))){
           dy=-dy;
           y+=dy;
           x+=dx;
        }
        
-       if (((docasneY)>=(_obj.y))&&((docasneY + novaVyska)<=((_obj.y+_obj.vyska).toDouble()))){
+       if (((docasneY+dy)>=(_obj.y))&&((docasneY + novaVyska+dy)<=((_obj.y+_obj.vyska).toDouble()))){
          dx=-dx;
          x+=dx;
          y+=dy;
          
        }
        
-     
+      //_obj.naraz();
      //if((dx>0)&&(dy<0)){dx=-dx;};
      }
 
 
      
-     
-    }
+   }
+   
+   
+    
   
   void pohyb(){
-     if((x+dx > platno.width)||(x+dx<0)) dx = -dx;
-     if((y+dy>platno.height)){} ;
+     if((x+sirka+dx > platno.width)||(x+dx<0)) dx = -dx;
+     if((y+dy>platno.height)){pokusy-=1;dy=-dy;} ;
      if((y+dy<0))dy = -dy;
     /* if(kolizniTest(palka)){
         dy=-dy;
@@ -224,7 +272,8 @@ class Micek extends HerniObjekt{
      y += dy;  
 
   }
-}
+  }
+
 
 class Cihla extends HerniObjekt{
   int zivot;
@@ -235,8 +284,8 @@ class Cihla extends HerniObjekt{
   
   Cihla(){
     barva="red";
-    sirka = 172;
-    vyska = 134;
+    sirka = 72;
+    vyska = 34;
     id = cihly.length +1;
   }
   
@@ -252,11 +301,13 @@ class Cihla extends HerniObjekt{
 
   
   bool naraz(){
-    if (zivot>0) {zivot -= 1;return false;}
-    else{
+    bool ret=false;
+    if (zivot>0) {zivot -= 1;}
+    if(zivot<1){
       body+=skore;
-      return true;  
+      ret= true;  
     }
+    return ret;
     }
   
   
