@@ -1,6 +1,7 @@
 import 'dart:html';
 import 'dart:math';
 import 'package:vector_math/vector_math.dart';
+import 'dart:collection';
 
 CanvasElement platno;
 CanvasRenderingContext2D ctx;
@@ -8,6 +9,7 @@ Stopwatch stopky = new Stopwatch();
 List<HerniObjekt> herniObjekty = new List<HerniObjekt>();
 List<Cihla> cihly = new List<Cihla>();
 List<Cihla> mazaneCihly = new List<Cihla>();
+List<Cihla> noveCihly = new List<Cihla>();
 List<PowerUp> pupy = new List<PowerUp>();
 List<PowerUp> mazanePower = new List<PowerUp>();
 Palka palka;
@@ -15,6 +17,8 @@ Micek micek;
 Cihla cihla;
 int body=0;
 int pokusy=3;
+HashMap<PowerUp,int> efekty = new HashMap<PowerUp,int>();
+
 
 void main() {
    platno = querySelector("#platno");
@@ -107,18 +111,34 @@ void draw(){
 
 void loop(num _){
   pupy.forEach((objekt)=> objekt.pohyb());
-  pupy.forEach((objekt) {
-    if(objekt.sebran&&(objekt.s.elapsedMilliseconds>objekt.cas)) {
-      objekt.ukonci();mazanePower.add(objekt);
-      }
-    });
   pupy.forEach((pup) { 
     if(palka.kolizniTest(pup)) pup.kolize();
     });
+  pupy.forEach((objekt) {
+    if(objekt.sebran) {
+      if(efekty[objekt] == null) efekty[objekt]=0;      
+      efekty[objekt]=efekty[objekt] + objekt.cas;
+      
+      mazanePower.add(objekt);                                                                          
+      }
+    });
+  efekty.forEach((objekt,value) { 
+    if (objekt.s.elapsedMilliseconds> value){
+      objekt.ukonci();
+      objekt.s.stop();
+      objekt.s.reset();
+    }
+  } );
   cihly.forEach((objekt) {
     if(micek.kolizniTest(objekt)&&objekt.naraz()) mazaneCihly.add(objekt);});
   micek.pohyb();
-
+  if (cihly.isEmpty){
+    randGen();
+    randGen();
+    randGen();
+  }
+  cihly.addAll(noveCihly);
+  noveCihly.clear();
   mazaneCihly.forEach((obj) =>cihly.remove(obj));
   mazaneCihly.clear();
   mazanePower.forEach((obj) =>pupy.remove(obj));
@@ -127,6 +147,40 @@ void loop(num _){
 
 }
 
+void randGen(){
+  
+  
+  var random = new Random();
+  int r= random.nextInt(3)+2;
+  for (int i=0; i<r;i++){
+    int x = (random.nextInt(7)+1)*100;
+    int y = (random.nextInt(8)+1)*50;
+    int p = random.nextInt(3);
+    int z = random.nextInt(2)+1;
+    int s = (random.nextInt(19)+1)*50;
+    Cihla c = new Cihla();
+    c.nastavParametry(x, y, z, p, s);
+    bool kolize = false;
+    cihly.forEach((objekt){if(c.kolizniTest(objekt)) kolize=true;});
+if (!kolize){
+  noveCihly.add(c);
+}
+else i-=1;
+    
+  }
+}
+
+void hlidacSkore(){
+  if ((body % 150) == 0){
+    randGen();
+    if (!((micek.dx==10) || (micek.dx==-10))){
+      if (micek.dx>0) micek.dx+=0.2;
+      else micek.dx-=0.2;
+      if (micek.dy>0) micek.dy+=0.2;
+      else micek.dy-=0.2;
+    }
+  }
+}
 
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -179,8 +233,8 @@ class Palka extends HerniObjekt{
 }
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 class Micek extends HerniObjekt{
-  int dx;
-  int dy;
+  double dx;
+  double dy;
   double docasneX;
        double docasneY;
        double novaSirka;
@@ -193,8 +247,8 @@ class Micek extends HerniObjekt{
     x = ((_can.width)~/2)-(sirka~/2);
     y = ((_can.height)~/2)-(sirka~/2);
     barva = "blue";
-    dx = 3;
-    dy = 3;
+    dx = 3.0;
+    dy = 3.0;
   }
   
   void nakresliSe(CanvasRenderingContext2D _ctx){
@@ -309,6 +363,7 @@ class Cihla extends HerniObjekt{
     if (zivot>0) {zivot -= 1;}
     if(zivot<1){
       body+=skore;
+      hlidacSkore();
       vyhodPowerup();
       ret= true;  
     }
@@ -354,6 +409,13 @@ class PowerUp extends HerniObjekt{
        micek.sirka = 20; micek.vyska = 20; break; 
    }
    
+ }
+ 
+ @override
+ 
+ bool equals(PowerUp p){
+   if (this.id == p.id) return true;
+   else return false;
  }
  
  void kolize(){
