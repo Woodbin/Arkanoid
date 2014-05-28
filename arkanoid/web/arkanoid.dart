@@ -9,6 +9,7 @@ List<HerniObjekt> herniObjekty = new List<HerniObjekt>();
 List<Cihla> cihly = new List<Cihla>();
 List<Cihla> mazaneCihly = new List<Cihla>();
 List<PowerUp> pupy = new List<PowerUp>();
+List<PowerUp> mazanePower = new List<PowerUp>();
 Palka palka;
 Micek micek;
 Cihla cihla;
@@ -43,7 +44,7 @@ void udelejCihly(){
   cihla.nastavParametry(100,200,2,1,200);
   cihly.add(cihla);
   cihla = new Cihla();
-  cihla.nastavParametry(200,200,2,1,200);
+  cihla.nastavParametry(200,200,2,2,200);
   cihly.add(cihla);
   cihla = new Cihla();
   cihla.nastavParametry(300,200,2,1,200);
@@ -58,28 +59,28 @@ void udelejCihly(){
   cihla.nastavParametry(600,200,2,1,200);
   cihly.add(cihla);
   cihla = new Cihla();
-  cihla.nastavParametry(700,200,2,1,200);
+  cihla.nastavParametry(700,200,2,2,200);
   cihly.add(cihla);
   cihla = new Cihla();
   cihla.nastavParametry(100,400,2,1,200);
   cihly.add(cihla);
   cihla = new Cihla();
-  cihla.nastavParametry(200,400,2,1,200);
+  cihla.nastavParametry(200,400,2,2,200);
   cihly.add(cihla);
   cihla = new Cihla();
   cihla.nastavParametry(300,400,2,0,200);
   cihly.add(cihla);
   cihla = new Cihla();
-  cihla.nastavParametry(400,400,2,0,200);
+  cihla.nastavParametry(400,400,2,2,200);
   cihly.add(cihla);
   cihla = new Cihla();
-  cihla.nastavParametry(500,400,2,0,200);
+  cihla.nastavParametry(500,400,2,2,200);
   cihly.add(cihla);
   cihla = new Cihla();
   cihla.nastavParametry(600,400,2,0,200);
   cihly.add(cihla);
   cihla = new Cihla();
-  cihla.nastavParametry(700,400,2,0,200);
+  cihla.nastavParametry(700,400,2,2,200);
   cihly.add(cihla);
   
 }
@@ -93,6 +94,7 @@ void draw(){
   herniObjekty.forEach((objekt) => objekt.nakresliSe(ctx));
   cihly.forEach((objekt) => objekt.nakresliSe(ctx)); 
   pupy.forEach((objekt)=> objekt.nakresliSe(ctx));
+  ctx.fillStyle="black";
   ctx.fillText("Pokusy: "+pokusy.toString(), 20, 20);
   ctx.fillText("Skóre: "+body.toString(), 20, 40);
   
@@ -105,13 +107,22 @@ void draw(){
 
 void loop(num _){
   pupy.forEach((objekt)=> objekt.pohyb());
-  pupy.forEach((objekt) {if(objekt.sebran&&(objekt.s.elapsedMilliseconds>objekt.cas)) objekt.ukonci();});
-  pupy.forEach((pup) { if(palka.kolizniTest(pup)) pup.kolize();});
-  cihly.forEach((objekt) { if(micek.kolizniTest(objekt)&&objekt.naraz()) mazaneCihly.add(objekt);});
+  pupy.forEach((objekt) {
+    if(objekt.sebran&&(objekt.s.elapsedMilliseconds>objekt.cas)) {
+      objekt.ukonci();mazanePower.add(objekt);
+      }
+    });
+  pupy.forEach((pup) { 
+    if(palka.kolizniTest(pup)) pup.kolize();
+    });
+  cihly.forEach((objekt) {
+    if(micek.kolizniTest(objekt)&&objekt.naraz()) mazaneCihly.add(objekt);});
   micek.pohyb();
 
   mazaneCihly.forEach((obj) =>cihly.remove(obj));
   mazaneCihly.clear();
+  mazanePower.forEach((obj) =>pupy.remove(obj));
+  mazanePower.clear();
   draw();
 
 }
@@ -329,6 +340,7 @@ class PowerUp extends HerniObjekt{
    sebran = false;
    switch(id){
      case 1: barva="yellow"; cas = 10000; break;
+     case 2: barva="orange"; cas = 10000; break;
    }
    
  }
@@ -338,6 +350,8 @@ class PowerUp extends HerniObjekt{
    switch(id){
      case 1:
        palka.sirka = 150; break;
+     case 2: 
+       micek.sirka = 20; micek.vyska = 20; break; 
    }
    
  }
@@ -360,6 +374,7 @@ class PowerUp extends HerniObjekt{
    switch(id){
      case 1:
        palka.sirka = 100; break;
+     case 2: micek.sirka = 10; micek.vyska = 10; break;
    }
  }
  
