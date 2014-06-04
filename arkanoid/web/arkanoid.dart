@@ -20,6 +20,7 @@ int pokusy=3;
 HashMap<PowerUp,int> efekty = new HashMap<PowerUp,int>();
 
 
+
 void main() {
    platno = querySelector("#platno");
    ctx = platno.context2D;
@@ -110,23 +111,24 @@ void draw(){
 }
 
 void loop(num _){
-  pupy.forEach((objekt)=> objekt.pohyb());
-  pupy.forEach((pup) { 
+  pupy.forEach((objekt)=> objekt.pohyb());                   //pohyb powerupu
+  pupy.forEach((pup) {                                       //kolize powerupů
     if(palka.kolizniTest(pup)) pup.kolize();
     });
-  pupy.forEach((objekt) {
+  pupy.forEach((objekt) {                                 //zpracování sebraných powerupů
     if(objekt.sebran) {
       if(efekty[objekt] == null) efekty[objekt]=0;      
-      efekty[objekt]=efekty[objekt] + objekt.cas;
-      
+      efekty[objekt]=efekty[objekt] + objekt.cas;     
       mazanePower.add(objekt);                                                                          
       }
     });
-  efekty.forEach((objekt,value) { 
+  
+  efekty.forEach((objekt,value) {                         //smazání ''prošlých'' powerupů
     if (objekt.s.elapsedMilliseconds> value){
       objekt.ukonci();
       objekt.s.stop();
       objekt.s.reset();
+      value=0;
     }
   } );
   cihly.forEach((objekt) {
@@ -148,8 +150,6 @@ void loop(num _){
 }
 
 void randGen(){
-  
-  
   var random = new Random();
   int r= random.nextInt(3)+2;
   for (int i=0; i<r;i++){
@@ -157,7 +157,7 @@ void randGen(){
     int y = (random.nextInt(8)+1)*50;
     int p = random.nextInt(3);
     int z = random.nextInt(2)+1;
-    int s = (random.nextInt(19)+1)*50;
+    int s = (random.nextInt(8)+1)*50;
     Cihla c = new Cihla();
     c.nastavParametry(x, y, z, p, s);
     bool kolize = false;
@@ -185,21 +185,13 @@ void hlidacSkore(){
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 abstract class HerniObjekt{
-  int x;
-  int y;
+  var x;
+  var y;
   int sirka;
   int vyska;
   String barva;
   
   bool kolizniTest(HerniObjekt _obj){
-   /* if(((_obj.y)<(y + vyska))
-            &&((_obj.x + _obj.sirka)>(x))
-            &&((_obj.x)<(x + sirka))
-            &&((_obj.y+_obj.vyska)>(y))){
-          return true;
-          }
-        else
-          return false;*/
         Rectangle tento = new Rectangle(x, y, sirka, vyska);
         Rectangle tamten = new Rectangle(_obj.x, _obj.y, _obj.sirka, _obj.vyska);
        return tento.containsRectangle(tamten);
@@ -334,7 +326,7 @@ class Cihla extends HerniObjekt{
   int skore;
   int id;
   
-  
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   Cihla(){
 
     sirka = 72;
@@ -412,11 +404,16 @@ class PowerUp extends HerniObjekt{
  }
  
  @override
- 
- bool equals(PowerUp p){
+ bool operator==(PowerUp p){
    if (this.id == p.id) return true;
    else return false;
  }
+ 
+ @override
+ int get hashCode{
+    return id;
+ }
+ 
  
  void kolize(){
    efekt();
@@ -436,7 +433,8 @@ class PowerUp extends HerniObjekt{
    switch(id){
      case 1:
        palka.sirka = 100; break;
-     case 2: micek.sirka = 10; micek.vyska = 10; break;
+     case 2:
+       micek.sirka = 10; micek.vyska = 10; break;
    }
  }
  
