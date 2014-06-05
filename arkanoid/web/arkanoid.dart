@@ -1,6 +1,5 @@
 import 'dart:html';
 import 'dart:math';
-import 'package:vector_math/vector_math.dart';
 import 'dart:collection';
 
 CanvasElement platno;
@@ -21,6 +20,10 @@ HashMap<PowerUp,int> efekty = new HashMap<PowerUp,int>();
 
 
 
+/**
+ *  Hlavní metoda
+ *  Vytvoření plátna, spuštění inicializace
+ */
 void main() {
    platno = querySelector("#platno");
    ctx = platno.context2D;
@@ -28,6 +31,11 @@ void main() {
    init();
 }
 
+/** Inicializace hry
+ * Co je potřeba udělat před začátkem - vytvoření míčku, pálky, vytvoření cihliček...
+ * Mimo jiné registrace eventu pro ovládání pálky
+ * Na závěr - spuštění vykreslovací smyčky
+ */
 void init(){
   ctx.fillStyle="white";
   ctx.fillRect(0, 0, platno.width, platno.height);
@@ -35,81 +43,49 @@ void init(){
   micek = new Micek(platno);
   micek.x = 500;
   micek.y = 500;
-  platno.onMouseMove.listen(palka.move);                                  //<--------
+  platno.onMouseMove.listen(palka.move);       //Propojení eventu pohybu myši po plátnu a pohybu pálkou
   herniObjekty.add(palka);
   herniObjekty.add(micek);
   udelejCihly();
-  
-  
+   
   draw();
 }
 
+/** Vytvoření startovních cihel 
+ */
 void udelejCihly(){
-  cihla = new Cihla();
-  cihla.nastavParametry(100,200,2,1,200);
-  cihly.add(cihla);
-  cihla = new Cihla();
-  cihla.nastavParametry(200,200,2,2,200);
-  cihly.add(cihla);
-  cihla = new Cihla();
-  cihla.nastavParametry(300,200,2,1,200);
-  cihly.add(cihla);
-  cihla = new Cihla();
-  cihla.nastavParametry(400,200,2,1,200);
-  cihly.add(cihla);
-  cihla = new Cihla();
-  cihla.nastavParametry(500,200,2,1,200);
-  cihly.add(cihla);
-  cihla = new Cihla();
-  cihla.nastavParametry(600,200,2,1,200);
-  cihly.add(cihla);
-  cihla = new Cihla();
-  cihla.nastavParametry(700,200,2,2,200);
-  cihly.add(cihla);
-  cihla = new Cihla();
-  cihla.nastavParametry(100,400,2,1,200);
-  cihly.add(cihla);
-  cihla = new Cihla();
-  cihla.nastavParametry(200,400,2,2,200);
-  cihly.add(cihla);
-  cihla = new Cihla();
-  cihla.nastavParametry(300,400,2,0,200);
-  cihly.add(cihla);
-  cihla = new Cihla();
-  cihla.nastavParametry(400,400,2,2,200);
-  cihly.add(cihla);
-  cihla = new Cihla();
-  cihla.nastavParametry(500,400,2,2,200);
-  cihly.add(cihla);
-  cihla = new Cihla();
-  cihla.nastavParametry(600,400,2,0,200);
-  cihly.add(cihla);
-  cihla = new Cihla();
-  cihla.nastavParametry(700,400,2,2,200);
-  cihly.add(cihla);
+  for(int i = 0; i<5 ; i++) randGen();
   
 }
 
+/**
+ * Vykreslovací smyčka
+ * Iterování skrz jednotlivé seznamy objektů a jejich vykreslování
+ */
 void draw(){
   ctx.fillStyle="white";
   ctx.beginPath();
   ctx.fillRect(0,0,platno.width,platno.height);
   ctx.fill();
     
-  herniObjekty.forEach((objekt) => objekt.nakresliSe(ctx));
-  cihly.forEach((objekt) => objekt.nakresliSe(ctx)); 
-  pupy.forEach((objekt)=> objekt.nakresliSe(ctx));
+  herniObjekty.forEach((objekt) => objekt.nakresliSe(ctx));       //
+  cihly.forEach((objekt) => objekt.nakresliSe(ctx));              // Smyčky vykreslující objekty  
+  pupy.forEach((objekt)=> objekt.nakresliSe(ctx));                //
   ctx.fillStyle="black";
   ctx.fillText("Pokusy: "+pokusy.toString(), 20, 20);
   ctx.fillText("Skóre: "+body.toString(), 20, 40);
   
-  if(pokusy!=0) window.requestAnimationFrame(loop);
-  else{
-    ctx.fillStyle="black";
-    ctx.fillText("Konec hry!", 400, 400);
+  if(pokusy!=0) window.requestAnimationFrame(loop);           //Pokud máme životy, hry pokračuje
+  else{                                                       //jinak
+    ctx.fillStyle="black";                                    //
+    ctx.fillText("Konec hry!", 400, 400);                     // Konec hry :)
   }
 }
 
+/**Herní smyčka
+ * Projíždění herní logikou, kontrolování podmínek pro powerupy atd...
+ * 
+ */
 void loop(num _){
   pupy.forEach((objekt)=> objekt.pohyb());                   //pohyb powerupu
   pupy.forEach((pup) {                                       //kolize powerupů
@@ -131,45 +107,51 @@ void loop(num _){
       value=0;
     }
   } );
-  cihly.forEach((objekt) {
-    if(micek.kolizniTest(objekt)&&objekt.naraz()) mazaneCihly.add(objekt);});
+  cihly.forEach((objekt) {                          //Kolize míčku s cihlami
+    if(micek.kolizniTest(objekt)&&objekt.naraz()) mazaneCihly.add(objekt);}); //Pokud kolize && cihla nemá životy, znič ji
   micek.pohyb();
-  if (cihly.isEmpty){
-    randGen();
+  if (cihly.isEmpty){   //Pokud došly cihly
+    randGen();          // vygeneruj nové
     randGen();
     randGen();
   }
-  cihly.addAll(noveCihly);
+  cihly.addAll(noveCihly);      //přidej všechny nově vygenerované cihly na herní plochu
   noveCihly.clear();
-  mazaneCihly.forEach((obj) =>cihly.remove(obj));
-  mazaneCihly.clear();
-  mazanePower.forEach((obj) =>pupy.remove(obj));
-  mazanePower.clear();
-  draw();
+  mazaneCihly.forEach((obj) =>cihly.remove(obj));       //
+  mazaneCihly.clear();                                  // Mazání cihel a powerupů které už nemají být ve hře
+  mazanePower.forEach((obj) =>pupy.remove(obj));        //
+  mazanePower.clear();                                  //
+  draw();                                   //Zavolej vykreslování - aby herní smyčka pokračovala
 
 }
 
+/**
+ * Náhodné generování cihel
+ */
 void randGen(){
   var random = new Random();
-  int r= random.nextInt(3)+2;
+  int r= random.nextInt(3)+2;       //chceme 2-5 cihel
   for (int i=0; i<r;i++){
-    int x = (random.nextInt(7)+1)*100;
-    int y = (random.nextInt(8)+1)*50;
-    int p = random.nextInt(3);
-    int z = random.nextInt(2)+1;
-    int s = (random.nextInt(8)+1)*50;
-    Cihla c = new Cihla();
-    c.nastavParametry(x, y, z, p, s);
+    int x = (random.nextInt(7)+1)*100;    //
+    int y = (random.nextInt(8)+1)*50;     //
+    int p = random.nextInt(3);            // Vygenerování náhodných parametrů cihliček
+    int z = random.nextInt(2)+1;          //
+    int s = (random.nextInt(8)+1)*50;     //
+    Cihla c = new Cihla();            //vytvoř novou cihlu...
+    c.nastavParametry(x, y, z, p, s); //...s těmito parametry
     bool kolize = false;
-    cihly.forEach((objekt){if(c.kolizniTest(objekt)) kolize=true;});
-if (!kolize){
+    cihly.forEach((objekt){if(c.kolizniTest(objekt)) kolize=true;});    //Testujeme, zda nová cihla nekoliduje s existující
+if (!kolize){                 //Pokud nekoliduje, přidej ji
   noveCihly.add(c);
 }
-else i-=1;
+else i-=1;                    //Pokud koliduje, vygenerujeme místo ní novou
     
   }
 }
 
+/**
+ * Hlídač - testuje zda je čas generovat nové cihličky a zrychluje pohyb míčku
+ */
 void hlidacSkore(){
   if ((body % 150) == 0){
     randGen();
@@ -184,6 +166,14 @@ void hlidacSkore(){
 
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/** Herní objekt
+ *  Abstrakt, ze kterého postupně dědíme. Sám o sobě má všechny vlastnosti a umí všechny metody,
+ *  které by herní objekt měl umět. Obsahuje vše, co je našim budoucím objektům společné. Nebo
+ *  lépe, všechny další objekty umí přesně to, co Herní Objekt. Pokud budeme později potřebovat 
+ *  něco změnit, využijeme dědičnosti.
+ *  Abstraktní objekt nelze sám o sobě použít, což dává smysl, jelikož nás zajímají konkrétní
+ *  herní objekty s určitou formou a vlastnostmi.
+ */ 
 abstract class HerniObjekt{
   var x;
   var y;
@@ -191,27 +181,38 @@ abstract class HerniObjekt{
   int vyska;
   String barva;
   
+  /** Kolizní objekt
+   *  Jedna z našich nejduležitějších metod - funkce, která testuje, jestli se dva objekty 
+   *  nepřekrývají. 
+   */
   bool kolizniTest(HerniObjekt _obj){
-        Rectangle tento = new Rectangle(x, y, sirka, vyska);
-        Rectangle tamten = new Rectangle(_obj.x, _obj.y, _obj.sirka, _obj.vyska);
-       return tento.containsRectangle(tamten);
+        Rectangle tento = new Rectangle(x, y, sirka, vyska);      //vytvoř obdélník z vlastností tohoto objektu
+        Rectangle tamten = new Rectangle(_obj.x, _obj.y, _obj.sirka, _obj.vyska); //vytvoř obdélník z vlastností objektu z parametru funkce
+       return tento.containsRectangle(tamten); //Využijeme metodu třídy Rectangle, která vypočte kolizi :)
   }
   
   
-  Vector2 smerovyTest(HerniObjekt _obj){
-     return new Vector2((_obj.x-x).toDouble(),(_obj.y-y).toDouble());
-  }
   
-
+  /**
+   * Vykreslovací metoda
+   * Každý zděděný objekt by se už v základu měl umět nakreslit
+   */
   void nakresliSe(CanvasRenderingContext2D _ctx){
     _ctx.fillStyle = barva;
-    _ctx.fillRect(x, y, sirka, vyska);
+    _ctx.fillRect(x, y, sirka, vyska);    //Vykresli obdélník podle vlastností objektu
     _ctx.fill();
   }
 }
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/**
+ * Pálka - náš "hráč".
+ * Tím, že dědíme z Herního objektu nemusíme zmiňovat to, co už máme - rozměry, barvu, vykreslování...
+ * Pouze Herní Objekt obohatíme o to, co dělá pálku pálkou.
+ */
 class Palka extends HerniObjekt{
-  
+  /**
+   * Konstruktor
+   */
   Palka(CanvasElement _can){
     sirka = 100;
     vyska = 15;
@@ -219,20 +220,30 @@ class Palka extends HerniObjekt{
     y = (_can.height)-50;
     barva = "green";    
   }
+  /**
+   * Pohybovací metoda - přesune pálku na pozici myši
+   */
   void move(MouseEvent e){
     x = e.offset.x;
   }
 }
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/**
+ * Míček
+ * Opět zděděný z Herního Objektu
+ * Má mnoho proměnných navíc kvuli přepočtům kolizí při pohybu
+ */
 class Micek extends HerniObjekt{
   double dx;
   double dy;
   double docasneX;
-       double docasneY;
-       double novaSirka;
-       double novaVyska;
+  double docasneY;
+  double novaSirka;
+  double novaVyska;
   
-  
+ /**
+  * Konstruktor, zadáváme pouze plátno podle kterého se vypočte pozice 
+  */
   Micek(CanvasElement _can){
     sirka = 10;
     vyska = sirka;
@@ -243,97 +254,95 @@ class Micek extends HerniObjekt{
     dy = 3.0;
   }
   
+  /**
+   *  Přetížená zděděná metoda pro nakreslení
+   */
+  @override
   void nakresliSe(CanvasRenderingContext2D _ctx){
-    /*ctx.fillStyle = barva;
-    ctx.ellipse(x, y, sirka,sirka, 0, 0,2*PI , false);
-    ctx.fill();*/
     _ctx.fillStyle = barva; 
     _ctx.fillRect(x, y, sirka, sirka);
     _ctx.fill();
   }
   
+  /**
+   * Přetížený kolizní test
+   */
   @override
   bool kolizniTest(HerniObjekt _obj){
    if(((_obj.y)<(y + vyska))
-            &&((_obj.x + _obj.sirka)>(x))
-            &&((_obj.x)<(x + sirka))
-            &&((_obj.y+_obj.vyska)>(y))){
-          return true;
-          }
-        else
-          return false;
-        }
+   &&((_obj.x + _obj.sirka)>(x))
+   &&((_obj.x)<(x + sirka))
+   &&((_obj.y+_obj.vyska)>(y))){
+      return true;
+   }
+   else return false;
+  }
 
-  
+  /**
+   * Metoda pro počítání kolizí s objekty a adekvátní pohyb vůči výsledku kolize
+   * @param _obj Objekt se kterým se zjišťuje kolize
+   */
    void kolize(HerniObjekt _obj){
-  
-     
      if(kolizniTest(_obj)){
-
-            
-            novaSirka=((sirka/2)/sqrt(2))*2;
-            novaVyska=novaSirka;
-            
-            docasneX=((x+sirka/2))-(novaSirka/2);
-            docasneY=((y+vyska/2))-(novaVyska/2);
-
-         
-            
+       novaSirka=((sirka/2)/sqrt(2))*2;
+       novaVyska=novaSirka;
+       docasneX=((x+sirka/2))-(novaSirka/2);
+       docasneY=((y+vyska/2))-(novaVyska/2);     
+       
        if (((docasneX+dx)>=(_obj.x))&&((docasneX+novaSirka+dx)<=((_obj.x + _obj.sirka).toDouble()))){
           dy=-dy;
-          y+=dy;
-          x+=dx;
+          /*y+=dy;
+          x+=dx;*/
        }
        
        if (((docasneY+dy)>=(_obj.y))&&((docasneY + novaVyska+dy)<=((_obj.y+_obj.vyska).toDouble()))){
          dx=-dx;
-         x+=dx;
-         y+=dy;
+         /*x+=dx;
+         y+=dy;*/
          
-       }
-       
-      //_obj.naraz();
-     //if((dx>0)&&(dy<0)){dx=-dx;};
-     }
-
-
-     
+       } 
+     }   
    }
    
-   
-    
-  
+/**
+ * Metoda pro pohyb míčku
+ */
   void pohyb(){
-     if((x+sirka+dx > platno.width)||(x+dx<0)) dx = -dx;
-     if((y+dy>platno.height)){pokusy-=1;dy=-dy;} ;
-     if((y+dy<0))dy = -dy;
-    /* if(kolizniTest(palka)){
-        dy=-dy;
-     }*/
-     kolize(palka);
-     cihly.forEach((obj) => kolize(obj));
+     if((x+sirka+dx > platno.width)||(x+dx<0)) dx = -dx;    //Odrážení míčku od stěn
+     if((y+dy>platno.height)){pokusy-=1;dy=-dy;} ;          //Odrážení míčku od spodku a odebrání životu
+     if((y+dy<0))dy = -dy;                                  //Odrážení od stropu
+     kolize(palka);                                    //Spočtení kolize s pálkou
+     cihly.forEach((obj) => kolize(obj));              //Spočtení kolizí s cihlami
 
-     x += dx;
-     y += dy;  
+     x += dx;      //
+     y += dy;      // Hni se
 
-  }
+    }
   }
 
-
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/**
+ * Cihla
+ * Udržuje si ID které značí jaký typ powerupu cihlička obsahuje. Stejně tak udržuje informaci
+ * o množství životů (tedy počtu nárazů než cihlička zmizí) a počet bodů, které dostaneme za její
+ * zničení
+ */
 class Cihla extends HerniObjekt{
   int zivot;
   int powerup;
   int skore;
-  int id;
   
-//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/**
+ * Konstruktor - nastavujeme rozměry které jsou fixní
+ */
   Cihla(){
-
     sirka = 72;
     vyska = 34;
-    id = cihly.length +1;
   }
-  
+ 
+  /**
+   * Metoda pro hromadné nastavení parametrů cihly
+   */
   void nastavParametry(int _x, int _y, int ziv, int pow, int skor){
     x = _x;
     y = _y;
@@ -349,35 +358,50 @@ class Cihla extends HerniObjekt{
   }
   
 
-  
+  /**Co se má stát při nárazu míčku do cihly
+   * Hodnota vrací true nebo false - jde o takový myšlenkový hack - místo toho, abychom post ex 
+   * zjišťovali, jestli jsme cihlu zničili, nastavili jsme nárazové metodě návratovou hodnotu.
+   * Ta nám vrátí False, pokud cihla nebyla zničena, nebo True, pokud zničena byla.
+   */
   bool naraz(){
-    bool ret=false;
-    if (zivot>0) {zivot -= 1;}
-    if(zivot<1){
-      body+=skore;
-      hlidacSkore();
-      vyhodPowerup();
-      ret= true;  
+    bool ret=false; //Nastav návratovou hodnotu na false
+    if (zivot>0) {zivot -= 1;}    //Když mám ještě hodně životů. tak mi jeden odečti
+    if(zivot<1){                  //Když už nemám životy...
+      body+=skore;                //Připočti skóre
+      hlidacSkore();              //Dej hlídačovi echo ať se podívá jestli nemá vytvořit nové cihly
+      vyhodPowerup();             //Vyhoď powerup
+      ret= true;                  //Nastav return na true - byla jsem zničena
     }
-    return ret;
+    return ret;                   
     }
   
+  /**
+   * Metoda pro vyhazování powerupů
+   */
   void vyhodPowerup(){
-    if(powerup!=0){
-      PowerUp p = new PowerUp(x+(sirka~/2).toInt(),y+vyska,powerup);
-      pupy.add(p);
+    if(powerup!=0){         //Pokud mám nastavený nějaký powerup
+      PowerUp p = new PowerUp(x+(sirka~/2).toInt(),y+vyska,powerup);    //Vytvoř nový powerup
+      pupy.add(p);                                                      //A přidej ho do seznamu
     }
   }
   
   
 }
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/**
+ * Power Up
+ * Kromě toho že si uchovává své ID které značí jaký typ efektu má, má každý powerup také své stopky,
+ * které počítají uběhlý čas, pamatují si dobu po jakou trvají a má boolean značící, zda byl sebrán
+ */
 class PowerUp extends HerniObjekt{
  int id;
  int cas;
  Stopwatch s = new Stopwatch();
  bool sebran;
  
+ /**
+  * Konstruktor
+  */
  PowerUp(int _x, int _y, int _id){
    x=_x;
    y=_y;
@@ -385,16 +409,19 @@ class PowerUp extends HerniObjekt{
    vyska=10;
    id=_id;
    sebran = false;
-   switch(id){
+   switch(id){                    //Nastav barvu podle id powerupu
      case 1: barva="yellow"; cas = 10000; break;
      case 2: barva="orange"; cas = 10000; break;
    }
    
  }
  
+ /**
+  * Metoda spouštějící efekt   
+  */
  void efekt(){
-   s.start();
-   switch(id){
+   s.start();         //spusť stopky 
+   switch(id){        //podle toho jaké je ID proveď něco
      case 1:
        palka.sirka = 150; break;
      case 2: 
@@ -403,32 +430,51 @@ class PowerUp extends HerniObjekt{
    
  }
  
+ /**
+  * Přetížený operátor porovnávání - potřebujeme, aby se identičnost powerupů posuzovala
+  * pouze podle ID a nikoliv podle celých objektů.
+  */
  @override
  bool operator==(PowerUp p){
    if (this.id == p.id) return true;
    else return false;
  }
  
+ /**
+  * Přetížená metoda pro hashkód - kvuli hashtabulce. Chceme, aby se objekty indexovaly pouze podle ID
+  */
  @override
  int get hashCode{
     return id;
  }
  
- 
+ /**
+  * Když dojde ke kolizi s pálkou, spusť efekt a nastav sebrat=true
+  */
  void kolize(){
    efekt();
    sebran=true;
  }
  
+ /**
+  * Hýbej se dolůůůůů
+  */
  void pohyb(){
    y+=4;
  }
  
+ 
+ /**
+  * Přetížená metoda pro vykreslení - vykresluj se pouze pokud nejsi sebrán
+  */
   @override
   void nakresliSe(CanvasRenderingContext2D _ctx){
     if(!sebran) super.nakresliSe(_ctx);
   }
  
+  /**
+   * Metoda pro ukončení powerupů - vracíme všechno co jsme změnili zpět
+   */
  void ukonci(){
    switch(id){
      case 1:
